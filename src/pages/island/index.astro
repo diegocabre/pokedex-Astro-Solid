@@ -1,0 +1,21 @@
+---
+import { Counter } from "@/components/Counter";
+import Title from "@/components/shared/Title.astro";
+import Layout from "@/layouts/MainLayout.astro";
+
+const title = "Islas";
+const counterValue = 10;
+---
+
+<Layout title={title}>
+    <Title>{title}</Title>
+    <div
+        style={{
+            height: "100vh",
+            backgroundColor: "blue",
+            opacity: "0.5",
+        }}
+    >
+    </div>
+    <Counter client:visible initValue={counterValue} />
+</Layout>

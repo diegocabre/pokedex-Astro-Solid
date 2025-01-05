@@ -1,0 +1,128 @@
+---
+import PokemonCard from "@/components/pokemons/PokemonCard.astro";
+import type { GetStaticPaths } from "astro";
+import MainLayout from "@/layouts/MainLayout.astro";
+import type { PokemonListResponse } from "@/interfaces/pokemon-list.response";
+import Title from "@/components/shared/Title.astro";
+import { Icon } from "astro-icon/components";
+
+export const getStaticPaths = (async () => {
+    const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
+    const { results } = (await resp.json()) as PokemonListResponse;
+    return [
+        ...results.map(({ name, url }) => ({
+            params: { name },
+            props: { name, url },
+        })),
+    ];
+}) satisfies GetStaticPaths;
+
+const { name } = Astro.params;
+const { url } = Astro.props;
+const id = url.split("/").at(-2);
+const audioSrc = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;
+const imgSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+const title = `Pokemon Static | ${name}`;
+---
+
+<MainLayout
+    title={`Pokémon - #${id} ${name}`}
+    description={`Información sobre el Pokémon ${name}`}
+    image={imgSrc}
+>
+    <section class="mt-10 mx-10 flex flex-col justify-center items-center">
+        <div class="flex flex-row">
+            <div>
+                <button
+                    class="text-slate-500 hover:text-slate-700 hover:underline"
+                    onclick="history.back()">Regresar</button
+                >
+                <Title>{name}</Title>
+            </div>
+
+            <button
+                id="btn-favorite"
+                class="ml-10"
+                aria-label="Like"
+                data-name={name}
+                data-id={id}
+            >
+                <Icon data-outline name="heart-outline" size={50} />
+                <Icon data-full class="hidden" name="heart-full" size={50} />
+            </button>
+        </div>
+        <PokemonCard name={name} url={url} isBig />
+        <audio controls class="mt-10">
+            <source src={audioSrc} type="audio/ogg" />
+        </audio>
+    </section>
+</MainLayout>
+
+<script>
+    interface Favorite {
+        name: string;
+        id: string;
+    }
+
+    // Manejo del DOM al cargar la página
+    const handlePageLoad = () => {
+        let favorites: Favorite[] = JSON.parse(
+            localStorage.getItem("favorites") || "[]",
+        );
+
+        const btnFavorite = document.querySelector(
+            "#btn-favorite",
+        ) as HTMLButtonElement;
+
+        if (!btnFavorite) {
+            console.warn("Botón de favorito no encontrado.");
+            return;
+        }
+
+        const name = btnFavorite.dataset.name ?? "";
+        const id = btnFavorite.dataset.id ?? "";
+
+        const isFavorite = favorites.some((f) => f.name === name);
+
+        const heartOutline = btnFavorite.querySelector(
+            "[data-outline]",
+        ) as HTMLElement;
+        const heartFull = btnFavorite.querySelector(
+            "[data-full]",
+        ) as HTMLElement;
+
+        // Configurar estado inicial del botón
+        if (isFavorite) {
+            heartOutline?.classList.add("hidden");
+            heartFull?.classList.remove("hidden");
+        }
+
+        // Función para alternar estado de favoritos
+        const toggleFavorite = () => {
+            const isFavorite = favorites.some((f) => f.name === name);
+            if (isFavorite) {
+                favorites = favorites.filter((f) => f.name !== name);
+            } else {
+                favorites.push({ name, id });
+            }
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+        };
+
+        // Escucha el clic en el botón
+        btnFavorite.addEventListener("click", () => {
+            heartOutline?.classList.toggle("hidden");
+            heartFull?.classList.toggle("hidden");
+            toggleFavorite();
+        });
+    };
+
+    // Ejecutar lógica al cargar
+    handlePageLoad();
+</script>
+
+<style>
+    a {
+        @apply hover:text-slate-500 hover:underline;
+    }
+</style>

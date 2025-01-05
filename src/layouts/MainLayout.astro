@@ -1,0 +1,46 @@
+---
+import { siteInfo } from "@/const/site-info";
+import NavBar from "@/components/shared/NavBar.astro";
+interface Props {
+    title?: string;
+    image?: string;
+    description?: string;
+    author?: string;
+}
+
+const {
+    title = siteInfo.title,
+    description = siteInfo.description,
+    image,
+    author = siteInfo.author,
+} = Astro.props;
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content={Astro.generator} />
+        <!-- SEO -->
+        <meta name="description" content={description} />
+        <meta name="author" content={siteInfo.author} />
+
+        <!-- OG Metatags -->
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={image} />
+
+        <title>{title}</title>
+        <style>
+            @view-transition {
+                navigation: auto; /* enabled! */
+            }
+        </style>
+    </head>
+    <body class="bg-slate-800 text-slate-100 m-auto max-w-3xl p-4">
+        <NavBar />
+        <main class="mt-10">
+            <slot />
+        </main>
+    </body>
+</html>
